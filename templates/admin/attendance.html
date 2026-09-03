@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Attendance — {{ ev.title }}{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem;max-width:860px">
+  <a href="/admin/events" style="color:var(--muted);text-decoration:none;font-size:0.85rem;display:inline-flex;align-items:center;gap:0.4rem;margin-bottom:1.5rem">← Back to Events</a>
+  <div class="section-title">📋 Attendance</div>
+  <div class="section-sub">{{ ev.title }} · {{ ev.event_date }} · Tick students who attended — they earn +20 points</div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem">
+    <form method="POST" action="/admin/attendance/{{ ev.id }}">
+      {% if students %}
+        <div style="margin-bottom:1rem;font-size:0.85rem;color:var(--muted)">{{ students|length }} registered student(s)</div>
+        {% for s in students %}
+        <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+          <input type="checkbox" name="attended" value="{{ s['id'] }}" id="att-{{ s['id'] }}"
+                 {% if s['attended'] %}checked{% endif %}
+                 style="width:18px;height:18px;accent-color:var(--aurora1);cursor:pointer;flex-shrink:0"/>
+          <label for="att-{{ s['id'] }}" style="cursor:pointer;flex:1">
+            <div style="font-weight:500;font-size:0.9rem">{{ s['name'] }}</div>
+            <div style="color:var(--muted);font-size:0.78rem">
+              {{ s['email'] }} · Registered {{ s['registered_at'][:10] }}
+              {% if s['phone'] %}
+              &nbsp;·&nbsp; 📱 <span style="color:var(--text);font-weight:600">+91 {{ s['phone'] }}</span>
+              {% else %}
+              &nbsp;·&nbsp; <span style="color:#f87171">no mobile</span>
+              {% endif %}
+            </div>
+          </label>
+          {% if s['attended'] %}<span class="badge badge-approved" style="font-size:0.65rem">Attended</span>{% endif %}
+        </div>
+        {% endfor %}
+        <div style="margin-top:1.5rem;display:flex;gap:0.75rem">
+          <button class="btn btn-primary" type="submit">Save Attendance & Award Points</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="document.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=true)">Select All</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="document.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false)">Clear All</button>
+        </div>
+      {% else %}
+        <div style="text-align:center;padding:3rem;color:var(--muted)">No registrations for this event yet.</div>
+      {% endif %}
+    </form>
+  </div>
+</div>
+{% endblock %}

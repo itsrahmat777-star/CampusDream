@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:2rem">
+  <div style="width:100%;max-width:460px">
+
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="font-size:2.5rem;margin-bottom:0.5rem">✦</div>
+      <h1 style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:400;color:var(--text);margin-bottom:0.3rem">Join DreamCampus</h1>
+      <p style="color:var(--muted);font-size:0.9rem">Create your free student account</p>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem">
+      <form method="POST" action="/register">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input class="form-input" type="text" name="name" placeholder="Enter your full name" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">College Email *</label>
+          <input class="form-input" type="email" name="email" placeholder="yourname@college.edu" required/>
+        </div>
+
+        <!-- Mobile number field -->
+        <div class="form-group">
+          <label class="form-label">Mobile Number *
+            <span style="color:var(--muted);font-weight:400;text-transform:none;font-size:0.78rem"> — required for event verification</span>
+          </label>
+          <div style="position:relative">
+            <span style="position:absolute;left:0.85rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:0.88rem;pointer-events:none">+91</span>
+            <input class="form-input" type="tel" name="phone" id="phone-input"
+                   placeholder="9XXXXXXXXX"
+                   maxlength="10"
+                   pattern="[6-9][0-9]{9}"
+                   style="padding-left:3rem"
+                   oninput="validatePhone(this)"
+                   required/>
+          </div>
+          <div id="phone-hint" style="font-size:0.73rem;margin-top:0.3rem;color:var(--muted)">
+            10 digits, starts with 6, 7, 8 or 9
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password <span style="color:var(--muted)">(min 6 chars)</span></label>
+          <input class="form-input" type="password" name="password" placeholder="Create a password" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <input class="form-input" type="password" name="confirm" placeholder="Repeat your password" required/>
+        </div>
+
+        <!-- Why we collect phone -->
+        <div style="background:rgba(109,40,217,0.06);border:1px solid rgba(109,40,217,0.18);border-radius:10px;padding:0.75rem 1rem;margin-bottom:1.2rem;font-size:0.78rem;color:var(--muted);line-height:1.6">
+          🔒 <strong style="color:var(--text)">Why your mobile number?</strong><br/>
+          It is used by admins to contact registered students, verify attendance, and confirm event proposals. It is never shared publicly.
+        </div>
+
+        <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center;font-size:1rem;padding:0.8rem">Create Account →</button>
+      </form>
+      <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);text-align:center">
+        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:0.5rem">Already have an account?</p>
+        <a href="/login" style="color:var(--aurora1);font-weight:600;text-decoration:none">Sign in →</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% block scripts %}
+<script>
+function validatePhone(input){
+  var val = input.value.replace(/\D/g,'');
+  input.value = val;
+  var hint = document.getElementById('phone-hint');
+  if(val.length===0){
+    hint.textContent='10 digits, starts with 6, 7, 8 or 9';
+    hint.style.color='var(--muted)';
+    input.style.borderColor='var(--border)';
+  } else if(val.length===10 && /^[6-9]/.test(val)){
+    hint.textContent='✓ Valid mobile number';
+    hint.style.color='var(--aurora4)';
+    input.style.borderColor='var(--aurora4)';
+  } else if(val.length===10){
+    hint.textContent='✗ Must start with 6, 7, 8 or 9';
+    hint.style.color='#f87171';
+    input.style.borderColor='#f87171';
+  } else {
+    hint.textContent=val.length+'/10 digits entered';
+    hint.style.color='var(--muted)';
+    input.style.borderColor='var(--border)';
+  }
+}
+</script>
+{% endblock %}
+{% endblock %}

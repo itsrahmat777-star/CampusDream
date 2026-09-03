@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem;max-width:720px">
+
+  <!-- Profile header -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem;margin-bottom:1.5rem;display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap">
+    <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--aurora1),var(--aurora3));display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:700;color:#fff;flex-shrink:0">
+      {{ user['name'][0].upper() }}
+    </div>
+    <div style="flex:1;min-width:200px">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;color:var(--text)">{{ user['name'] }}</div>
+      <div style="color:var(--muted);font-size:0.875rem;margin-bottom:0.5rem">{{ user['email'] }}</div>
+      {% if user['bio'] %}<div style="color:var(--muted);font-size:0.85rem;line-height:1.6">{{ user['bio'] }}</div>{% endif %}
+      {% if user['phone'] %}
+      <div style="margin-top:0.5rem;font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+        📱 +91 {{ user['phone'] }}
+        <span style="padding:2px 8px;border-radius:99px;font-size:0.68rem;font-weight:600;background:rgba(52,211,153,0.15);color:var(--aurora4);border:1px solid rgba(52,211,153,0.3)">✓ Verified</span>
+      </div>
+      {% else %}
+      <div style="margin-top:0.5rem;font-size:0.8rem;color:#f87171">
+        ⚠️ No mobile number — scroll down to add one
+      </div>
+
+      {% endif %}
+    </div>
+    <div style="text-align:center;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:12px;padding:0.8rem 1.4rem;flex-shrink:0">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;color:var(--gold)">{{ user['points'] }}</div>
+      <div style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em">Points</div>
+      <div style="color:var(--muted);font-size:0.75rem;margin-top:0.2rem">Rank #{{ rank }}</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid-3" style="margin-bottom:1.5rem">
+    {% for icon,num,lbl in [('🎟️',reg_count,'Events Registered'),('⭐',rev_count,'Reviews Written'),('🔖',bm_count,'Events Saved')] %}
+    <div class="stat-card" style="flex-direction:column;align-items:flex-start;gap:0.3rem">
+      <div style="font-size:1.4rem">{{ icon }}</div>
+      <div class="stat-num">{{ num }}</div>
+      <div class="stat-label">{{ lbl }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Edit profile -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:1.8rem">
+    <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;margin-bottom:1.2rem">Edit Profile</h3>
+    <form method="POST" action="/profile">
+      <div class="form-group">
+        <label class="form-label">Display Name</label>
+        <input class="form-input" type="text" name="name" value="{{ user['name'] }}" required/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bio</label>
+        <textarea class="form-textarea" name="bio" rows="2" placeholder="Tell others a bit about yourself…">{{ user['bio'] or '' }}</textarea>
+      </div>
+
+      <!-- Phone number field -->
+      <div class="form-group">
+        <label class="form-label">Mobile Number
+          <span style="color:var(--muted);font-weight:400;text-transform:none;font-size:0.78rem"> — required to register &amp; propose events</span>
+        </label>
+        <div style="position:relative">
+          <span style="position:absolute;left:0.85rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:0.88rem;pointer-events:none">+91</span>
+          <input class="form-input" type="tel" name="phone" id="prof-phone"
+                 maxlength="10" pattern="[6-9][0-9]{9}"
+                 value="{{ user['phone'] or '' }}"
+                 placeholder="9XXXXXXXXX"
+                 style="padding-left:3rem"
+                 oninput="this.value=this.value.replace(/\D/g,''); profPhoneHint(this)"/>
+        </div>
+        <div id="prof-phone-hint" style="margin-top:0.3rem;font-size:0.73rem;color:{% if user['phone'] %}var(--aurora4){% else %}#f87171{% endif %}">
+          {% if user['phone'] %}✓ Mobile on file: +91 {{ user['phone'] }}
+          {% else %}⚠️ Add your mobile number — required before registering or proposing events{% endif %}
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-sm" type="submit">Save Changes</button>
+    </form>
+  </div>
+</div>
+{% block scripts %}
+<script>
+function profPhoneHint(input){
+  var val = input.value;
+  var hint = document.getElementById('prof-phone-hint');
+  if(val.length===10 && /^[6-9]/.test(val)){
+    hint.textContent = '✓ Valid: +91 ' + val;
+    hint.style.color = 'var(--aurora4)';
+    input.style.borderColor = 'var(--aurora4)';
+  } else if(val.length===10){
+    hint.textContent = '✗ Must start with 6, 7, 8 or 9';
+    hint.style.color = '#f87171';
+    input.style.borderColor = '#f87171';
+  } else if(val.length>0){
+    hint.textContent = val.length + '/10 digits';
+    hint.style.color = 'var(--muted)';
+    input.style.borderColor = 'var(--border)';
+  }
+}
+</script>
+{% endblock %}
+{% endblock %}

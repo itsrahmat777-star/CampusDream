@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}My Proposals{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem;max-width:860px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem">
+    <div>
+      <div class="section-title">💡 My Proposals</div>
+      <div class="section-sub">Track the status of your submitted event proposals</div>
+    </div>
+    <a href="/propose_event" class="btn btn-primary btn-sm">+ New Proposal</a>
+  </div>
+
+  {% if not student_phone %}
+  <div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.35);border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap">
+    <span style="font-size:1.2rem">⚠️</span>
+    <div style="flex:1">
+      <div style="font-weight:600;color:#f87171;font-size:0.9rem">Mobile number required to propose events</div>
+      <div style="color:var(--muted);font-size:0.8rem;margin-top:0.2rem">Admins need your contact to verify and approve proposals. Add your number in your profile first.</div>
+    </div>
+    <a href="/profile" class="btn btn-ghost btn-sm" style="border-color:rgba(248,113,113,0.4);color:#f87171">Add Mobile →</a>
+  </div>
+  {% else %}
+  <div style="background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.22);border-radius:12px;padding:0.7rem 1.2rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap">
+    <span>📱</span>
+    <span style="font-size:0.82rem;color:var(--muted)">Contact on file: <strong style="color:var(--text)">+91 {{ student_phone }}</strong></span>
+    <span style="padding:1px 8px;border-radius:99px;font-size:0.68rem;font-weight:600;background:rgba(52,211,153,0.15);color:var(--aurora4);border:1px solid rgba(52,211,153,0.3)">✓ verified</span>
+    <span style="font-size:0.78rem;color:var(--muted)">— Admin can reach you about your proposals</span>
+  </div>
+  {% endif %}
+  </div>
+
+  {% if proposals %}
+    {% for p in proposals %}
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.75rem;margin-bottom:0.75rem">
+        <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;color:var(--text)">{{ p['title'] }}</h3>
+        <span class="badge badge-{{ p['status'] }}">{{ p['status'].upper() }}</span>
+      </div>
+      <p style="color:var(--muted);font-size:0.875rem;line-height:1.6;margin-bottom:0.75rem">{{ p['description'][:200] }}{% if p['description']|length > 200 %}…{% endif %}</p>
+      <div style="display:flex;gap:1.5rem;flex-wrap:wrap;font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem">
+        {% if p['proposed_date'] %}<span>📅 {{ p['proposed_date'] }}</span>{% endif %}
+        {% if p['venue'] %}<span>📍 {{ p['venue'] }}</span>{% endif %}
+        <span>👥 {{ p['expected_participants'] }} expected</span>
+        <span>🗂 {{ p['category'] }}</span>
+      </div>
+      {% if p['admin_note'] %}
+      <div style="background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem">
+        <span style="color:var(--aurora1);font-weight:600">Admin Note: </span>
+        <span style="color:var(--muted)">{{ p['admin_note'] }}</span>
+      </div>
+      {% endif %}
+      <div style="font-size:0.75rem;color:var(--muted);margin-top:0.5rem">Submitted {{ p['created_at'][:10] }}</div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div style="text-align:center;padding:5rem 2rem;color:var(--muted)">
+      <div style="font-size:3rem;margin-bottom:1rem">💡</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--text);margin-bottom:0.5rem">No proposals yet</div>
+      <div style="margin-bottom:1.5rem">Have an idea for an event? Submit it for admin approval!</div>
+      <a href="/propose_event" class="btn btn-primary">Propose an Event →</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

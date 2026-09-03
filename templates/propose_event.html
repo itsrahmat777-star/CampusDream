@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Propose an Event{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem;max-width:680px">
+  <div class="section-title">💡 Propose an Event</div>
+  <div class="section-sub">Have a great idea? Submit it to the admin for approval. If approved, your event goes live on the portal!</div>
+
+  <div style="background:var(--card);border:1px solid rgba(167,139,250,0.25);border-radius:20px;padding:2rem;margin-bottom:1.5rem">
+    <div style="display:flex;gap:1rem;align-items:flex-start;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)">
+      <div style="font-size:1.8rem">🌟</div>
+      <div>
+        <div style="font-weight:600;color:var(--text);margin-bottom:0.25rem">How it works</div>
+        <div style="color:var(--muted);font-size:0.85rem;line-height:1.7">
+          Fill the form below → Admin reviews your proposal → If approved, the event is published on DreamCampus → You become the event organiser and students can register!
+        </div>
+      </div>
+    </div>
+
+    <form method="POST" action="/propose_event">
+      <div class="grid-2">
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Event Title *</label>
+          <input class="form-input" type="text" name="title" placeholder="Give your event a great name" required/>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Description *</label>
+          <textarea class="form-textarea" name="description" placeholder="Describe what the event is about, who it's for, and what participants will do…" rows="4" required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Proposed Date</label>
+          <input class="form-input" type="date" name="proposed_date" min="2026-01-01"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Proposed Time</label>
+          <input class="form-input" type="time" name="proposed_time"/>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Venue / Location</label>
+          <input class="form-input" type="text" name="venue" placeholder="e.g. Seminar Hall, Block B or Online"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Expected Participants</label>
+          <input class="form-input" type="number" name="expected_participants" min="1" value="50"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" name="category">
+            {% for cat in ['Technical','Cultural','Sports','Arts','General'] %}
+            <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.75rem;margin-top:0.5rem">
+        <button class="btn btn-primary" type="submit">Submit Proposal →</button>
+        <a href="/" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

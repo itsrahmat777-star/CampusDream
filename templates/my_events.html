@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}My Events{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem;max-width:860px">
+
+  <!-- Points banner -->
+  <div style="background:linear-gradient(135deg,rgba(167,139,250,0.1),rgba(251,191,36,0.08));border:1px solid rgba(167,139,250,0.2);border-radius:16px;padding:1.2rem 1.5rem;margin-bottom:2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+    <div>
+      <div style="font-weight:600;color:var(--text)">Hello, {{ session.name }} 👋</div>
+      <div style="font-size:0.85rem;color:var(--muted)">Keep registering and attending to earn more points!</div>
+    </div>
+    <div style="display:flex;gap:1rem;align-items:center">
+      <div style="text-align:center">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;color:var(--gold)">{{ user['points'] }}</div>
+        <div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Points</div>
+      </div>
+      <a href="/leaderboard" class="btn btn-ghost btn-sm">🏆 Leaderboard</a>
+      <a href="/profile" class="btn btn-ghost btn-sm">Edit Profile</a>
+    </div>
+  </div>
+
+  <!-- Tab selector -->
+  <div class="tab-bar" style="margin-bottom:2rem">
+    <a href="#registered" class="tab active" onclick="showTab('registered',this)">🎟️ Registered ({{ events|length }})</a>
+    <a href="#saved" class="tab" onclick="showTab('saved',this)">🔖 Saved ({{ saved|length }})</a>
+  </div>
+
+  <!-- Registered Events -->
+  <div id="tab-registered">
+    {% if events %}
+    <div style="display:flex;flex-direction:column;gap:0.85rem">
+      {% for ev in events %}
+      {% set cat = ev['category']|lower %}
+      <a href="/event/{{ ev['id'] }}" class="event-card" style="display:flex;gap:1.2rem;align-items:flex-start;text-decoration:none;color:inherit">
+        <div style="width:50px;height:50px;border-radius:12px;background:linear-gradient(135deg,rgba(167,139,250,0.2),rgba(96,165,250,0.2));display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">
+          {% if cat=='technical' %}💻{% elif cat=='cultural' %}🎭{% elif cat=='sports' %}🏅{% elif cat=='arts' %}🎨{% else %}✦{% endif %}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem">
+            <div>
+              <span class="badge badge-{{ cat }}" style="margin-bottom:0.3rem;display:inline-block">{{ ev['category'] }}</span>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;color:var(--text)">{{ ev['title'] }}</div>
+            </div>
+            <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+              {% if ev['attended'] %}
+              <span style="padding:3px 10px;border-radius:99px;font-size:0.72rem;font-weight:600;background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3)">✅ Attended +20pts</span>
+              {% endif %}
+              <span style="padding:3px 10px;border-radius:99px;font-size:0.72rem;font-weight:600;
+                background:{% if ev['status']=='upcoming' %}rgba(52,211,153,0.12){% elif ev['status']=='completed' %}rgba(96,165,250,0.12){% else %}rgba(248,113,113,0.12){% endif %};
+                color:{% if ev['status']=='upcoming' %}#34d399{% elif ev['status']=='completed' %}#60a5fa{% else %}#f87171{% endif %}">
+                {{ ev['status'].title() }}
+              </span>
+            </div>
+          </div>
+          <div style="color:var(--muted);font-size:0.8rem;margin-top:0.3rem">
+            📅 {{ ev['event_date'] or 'TBD' }} &nbsp;·&nbsp; 📍 {{ (ev['venue'] or 'TBD')[:50] }}
+          </div>
+          <div style="color:var(--muted);font-size:0.75rem;margin-top:0.2rem">Registered {{ ev['registered_at'][:10] }}</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:4rem 2rem;color:var(--muted)">
+      <div style="font-size:2.5rem;margin-bottom:1rem">🎟️</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;margin-bottom:0.5rem;color:var(--text)">No events registered yet</div>
+      <div style="margin-bottom:1.5rem">Register for events to earn points and appear on the leaderboard!</div>
+      <a href="/events" class="btn btn-primary">Browse Events →</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Saved / Bookmarked Events -->
+  <div id="tab-saved" style="display:none">
+    {% if saved %}
+    <div class="grid-2">
+      {% for ev in saved %}
+      {% set cat = ev['category']|lower %}
+      <a href="/event/{{ ev['id'] }}" class="event-card" style="text-decoration:none;color:inherit">
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem">
+          <span class="badge badge-{{ cat }}">{{ ev['category'] }}</span>
+          <span style="color:var(--muted);font-size:0.78rem">{{ ev['event_date'] or 'TBD' }}</span>
+        </div>
+        <div class="event-card-title">{{ ev['title'] }}</div>
+        <div class="event-card-meta">📍 {{ (ev['venue'] or 'TBD')[:40] }}</div>
+        <div style="margin-top:0.75rem;display:flex;justify-content:space-between;align-items:center">
+          <span style="color:var(--aurora1);font-size:0.8rem">View →</span>
+          <form method="POST" action="/bookmark/{{ ev['id'] }}" onclick="event.stopPropagation()">
+            <button class="btn btn-ghost btn-sm" type="submit" style="font-size:0.75rem;padding:0.25rem 0.6rem" title="Remove bookmark">🔖 Remove</button>
+          </form>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:4rem 2rem;color:var(--muted)">
+      <div style="font-size:2.5rem;margin-bottom:1rem">🔖</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;margin-bottom:0.5rem;color:var(--text)">No saved events</div>
+      <div style="margin-bottom:1.5rem">Bookmark events you're interested in to find them quickly.</div>
+      <a href="/events" class="btn btn-primary">Browse Events →</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% block scripts %}
+<script>
+function showTab(tab, el) {
+  event.preventDefault();
+  document.getElementById('tab-registered').style.display = tab==='registered' ? 'block' : 'none';
+  document.getElementById('tab-saved').style.display = tab==='saved' ? 'block' : 'none';
+  document.querySelectorAll('.tab-bar .tab').forEach(function(t){ t.classList.remove('active'); });
+  el.classList.add('active');
+}
+</script>
+{% endblock %}
+{% endblock %}

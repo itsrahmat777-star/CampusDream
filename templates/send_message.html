@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Send Message{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem;max-width:640px">
+  <a href="/inbox" style="color:var(--muted);text-decoration:none;font-size:0.85rem;display:inline-flex;align-items:center;gap:0.4rem;margin-bottom:1.5rem">← Back to Inbox</a>
+  <div class="section-title">✉️ Send Message</div>
+  <div class="section-sub">
+    {% if session.role == 'admin' %}Send to a specific student or broadcast to all{% else %}Send a message to the admin{% endif %}
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem">
+    <form method="POST" action="/message/send">
+      {% if session.role == 'admin' %}
+      <div class="form-group">
+        <label class="form-label">Send To</label>
+        <select class="form-select" name="receiver_id">
+          <option value="">— All Students (Broadcast) —</option>
+          {% for s in students %}
+          <option value="{{ s['id'] }}">{{ s['name'] }} ({{ s['email'] }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Related Event (optional)</label>
+        <select class="form-select" name="event_id">
+          <option value="">— No specific event —</option>
+          {% for ev in events %}
+          <option value="{{ ev['id'] }}">{{ ev['title'] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% else %}
+      <input type="hidden" name="receiver_id" value="{{ admin_id }}"/>
+      <div class="form-group">
+        <label class="form-label">Related Event (optional)</label>
+        <select class="form-select" name="event_id">
+          <option value="">— General enquiry —</option>
+          {% for ev in events %}
+          <option value="{{ ev['id'] }}">{{ ev['title'] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+      <div class="form-group">
+        <label class="form-label">Subject</label>
+        <input class="form-input" type="text" name="subject" placeholder="Enter subject" required/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Message</label>
+        <textarea class="form-textarea" name="body" placeholder="Write your message here…" rows="5" required></textarea>
+      </div>
+      <div style="display:flex;gap:0.75rem">
+        <button class="btn btn-primary" type="submit">Send Message →</button>
+        <a href="/inbox" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+
+    {% if session.role == 'admin' %}
+    <div style="margin-top:2rem;padding-top:2rem;border-top:1px solid var(--border)">
+      <div style="font-weight:600;margin-bottom:0.75rem;color:var(--text)">📢 Quick Broadcast</div>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem">Send announcement to all students registered for a specific event.</p>
+      <form method="POST" action="/message/broadcast">
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+          <select class="form-select" name="event_id" style="flex:1;min-width:200px">
+            <option value="">— All students —</option>
+            {% for ev in events %}
+            <option value="{{ ev['id'] }}">{{ ev['title'] }}</option>
+            {% endfor %}
+          </select>
+          <input class="form-input" type="text" name="subject" placeholder="Subject" required style="flex:1;min-width:180px"/>
+        </div>
+        <textarea class="form-textarea" name="body" placeholder="Broadcast message…" rows="3" required style="margin-top:0.75rem"></textarea>
+        <button class="btn btn-success btn-sm" type="submit" style="margin-top:0.75rem">📢 Send Broadcast</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

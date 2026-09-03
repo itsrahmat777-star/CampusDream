@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block title %}{{ ev.title }}{% endblock %}
+{% block content %}
+{% set cat = ev.category|lower %}
+{% set pct = ([count * 100 // ev.max_participants, 100]|min) if ev.max_participants else 0 %}
+{% set remaining = ev.max_participants - count %}
+
+<div class="container" style="padding-top:3rem;padding-bottom:4rem;max-width:860px">
+
+  <a href="/events" style="color:var(--muted);text-decoration:none;font-size:0.875rem;display:inline-flex;align-items:center;gap:0.4rem;margin-bottom:1.5rem">
+    ← Back to Events
+  </a>
+
+  <!-- ── Hero Venue Image ── -->
+  {% if ev.image_url %}
+  <div style="width:100%;height:290px;border-radius:20px;overflow:hidden;margin-bottom:1.5rem;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.35)">
+    <img src="{{ ev.image_url }}" alt="{{ ev.venue }}"
+         style="width:100%;height:100%;object-fit:cover;display:block"
+         onerror="this.onerror=null; this.src='{{ ev.fallback_image or '' }}'; this.style.objectFit='cover';"/>
+    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.05) 30%,rgba(0,0,0,0.72) 100%);pointer-events:none"></div>
+    <div style="position:absolute;bottom:1.4rem;left:1.6rem;right:1.6rem">
+      <span class="badge badge-{{ cat }}" style="background:rgba(0,0,0,0.45);color:#fff;border-color:rgba(255,255,255,0.3);backdrop-filter:blur(6px);margin-bottom:0.5rem;display:inline-block">{{ ev.category }}</span>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:400;color:#fff;line-height:1.2;text-shadow:0 2px 12px rgba(0,0,0,0.6)">{{ ev.title }}</div>
+      <div style="color:rgba(255,255,255,0.8);font-size:0.83rem;margin-top:0.35rem">📍 {{ ev.venue or 'TBD' }} &nbsp;·&nbsp; 📅 {{ ev.event_date or 'TBD' }} &nbsp;·&nbsp; ⏰ {{ ev.event_time or '' }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Event Card ── -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2.5rem;margin-bottom:1.5rem">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.75rem;margin-bottom:1rem">
+      <span class="badge badge-{{ cat }}">{{ ev.category }}</span>
+      <span class="badge badge-{{ ev.status }}" style="opacity:0.8">{{ ev.status.upper() }}</span>
+    </div>
+
+    <h1 style="font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:400;line-height:1.15;margin-bottom:1.25rem">{{ ev.title }}</h1>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.75rem;margin-bottom:1.5rem">
+      {% for icon,lbl,val in [('📅','Date',ev.event_date or 'TBD'),('⏰','Time',ev.event_time or 'TBD'),('📍','Venue',ev.venue or 'TBD'),('👥','Capacity',ev.max_participants|string+' seats')] %}
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:0.75rem 1rem">
+        <div style="font-size:1.1rem;margin-bottom:0.15rem">{{ icon }}</div>
+        <div style="color:var(--muted);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07em">{{ lbl }}</div>
+        <div style="font-weight:500;font-size:0.88rem;margin-top:0.1rem;word-break:break-word">{{ val }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <p style="color:var(--muted);line-height:1.85;margin-bottom:1.5rem">{{ ev.description or 'No description provided.' }}</p>
+
+    <!-- Capacity -->
+    <div style="margin-bottom:1.5rem">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:0.4rem">
+        <span style="color:var(--muted)">{{ count }} / {{ ev.max_participants }} registered</span>
+        <span style="font-weight:600;color:{% if remaining<=0 %}#f87171{% elif remaining<=10 %}#fbbf24{% else %}var(--aurora4){% endif %}">
+          {% if remaining<=0 %}Fully Booked{% else %}{{ remaining }} spots left{% endif %}
+        </span>
+      </div>
+      <div class="progress-wrap"><div class="progress-fill" style="width:{{ pct }}%"></div></div>
+    </div>
+
+    <!-- Who's going -->
+    {% if attendees %}
+    <div style="margin-bottom:1.5rem">
+      <div style="color:var(--muted);font-size:0.78rem;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.06em">Who's going</div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.4rem">
+        {% for a in attendees %}
+        <span style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.2);border-radius:99px;padding:3px 10px;font-size:0.78rem;color:var(--aurora1)">{{ a['name'] }}</span>
+        {% endfor %}
+        {% if count > attendees|length %}
+        <span style="color:var(--muted);font-size:0.78rem;padding:3px 6px">+{{ count - attendees|length }} more</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Action buttons -->
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center">
+      {% if session.user_id %}
+        {% if is_registered %}
+          <span style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.35);border-radius:10px;padding:0.6rem 1.2rem;color:#6ee7b7;font-weight:600;font-size:0.875rem">✓ You are registered</span>
+          <form method="POST" action="/cancel_event/{{ ev.id }}">
+            <button class="btn btn-ghost btn-sm" onclick="return confirm('Cancel your registration?')" type="submit">Cancel</button>
+          </form>
+        {% elif remaining <= 0 %}
+          <span class="btn btn-ghost" style="opacity:0.45;cursor:not-allowed">Fully Booked</span>
+        {% else %}
+          <form method="POST" action="/register_event/{{ ev.id }}">
+            <button class="btn btn-primary" type="submit" style="font-size:1rem;padding:0.75rem 2rem">🎟️ Register Now</button>
+          </form>
+        {% endif %}
+        <form method="POST" action="/bookmark/{{ ev.id }}">
+          <button class="btn btn-ghost btn-sm" type="submit" title="{{ 'Remove from saved' if is_bookmarked else 'Save event' }}">
+            {{ '🔖 Saved' if is_bookmarked else '🔖 Save' }}
+          </button>
+        </form>
+      {% else %}
+        <a href="/login" class="btn btn-primary" style="font-size:1rem">Login to Register →</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── Reviews ── -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem;position:relative;z-index:2">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.5rem">
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:400;margin:0">Reviews</h2>
+      {% if avg_rating %}
+        <div style="display:flex;align-items:center;gap:0.4rem;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:99px;padding:0.3rem 0.9rem">
+          <span style="color:var(--gold)">⭐</span>
+          <span style="color:var(--gold);font-weight:700">{{ avg_rating }}/5</span>
+          <span style="color:var(--muted);font-size:0.78rem">({{ feedbacks|length }} review{{ 's' if feedbacks|length != 1 }})</span>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Review form -->
+    {% if session.user_id %}
+      {% if already_reviewed %}
+        <div style="background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.25);border-radius:12px;padding:0.9rem 1.2rem;color:#6ee7b7;font-size:0.875rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.5rem">
+          ✓ You have already submitted a review for this event.
+        </div>
+      {% else %}
+        <div style="background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.2);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem">
+          <div style="font-weight:600;color:var(--text);margin-bottom:1rem;font-size:0.95rem">Leave a Review</div>
+          <form method="POST" action="/feedback/{{ ev.id }}">
+
+            <!-- Star rating — uses visible emoji labels over hidden radios -->
+            <div style="margin-bottom:1rem">
+              <div style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.5rem">Your Rating *</div>
+              <div style="display:flex;gap:0.5rem;margin-bottom:0.4rem">
+                {% for i in [1,2,3,4,5] %}
+                <label for="star{{ i }}" style="cursor:pointer;font-size:2.4rem;line-height:1;transition:transform 0.1s;display:block"
+                       onmouseover="hoverStar({{ i }})" onmouseout="resetStar()" onclick="selectStar({{ i }})">
+                  <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}"
+                         style="position:absolute;opacity:0;width:0;height:0"
+                         {% if i==3 %}checked{% endif %}>
+                  <span class="star-emoji" id="star-em-{{ i }}">{% if i<=3 %}⭐{% else %}☆{% endif %}</span>
+                </label>
+                {% endfor %}
+              </div>
+              <div id="star-label" style="color:var(--aurora1);font-size:0.82rem;font-weight:500;height:1.2em">3/5 — Good 👍</div>
+            </div>
+
+            <!-- Comment box -->
+            <div style="margin-bottom:1rem">
+              <label style="display:block;color:var(--muted);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem">Your Comment</label>
+              <textarea name="comment" rows="3"
+                style="width:100%;padding:0.75rem 1rem;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:0.9rem;resize:vertical;outline:none;box-sizing:border-box;transition:border-color 0.2s"
+                placeholder="Share your experience or thoughts about this event…"
+                onfocus="this.style.borderColor='var(--aurora1)'"
+                onblur="this.style.borderColor='var(--border)'"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sm">Submit Review →</button>
+          </form>
+        </div>
+      {% endif %}
+    {% else %}
+      <div style="background:rgba(96,165,250,0.07);border:1px solid rgba(96,165,250,0.2);border-radius:12px;padding:0.9rem 1.2rem;margin-bottom:1.5rem;font-size:0.875rem">
+        <a href="/login" style="color:var(--aurora2);font-weight:600;text-decoration:none">Login</a>
+        <span style="color:var(--muted)"> to leave a review for this event</span>
+      </div>
+    {% endif %}
+
+    <!-- Reviews list -->
+    {% if feedbacks %}
+      <div>
+        {% for f in feedbacks %}
+        <div style="padding:1.1rem 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.35rem">
+            <div style="display:flex;align-items:center;gap:0.5rem">
+              <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--aurora1),var(--aurora2));display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#fff;flex-shrink:0">
+                {{ f['name'][0].upper() }}
+              </div>
+              <span style="font-weight:600;font-size:0.9rem">{{ f['name'] }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.3rem">
+              <span style="color:var(--gold);font-size:0.95rem">{{ '⭐' * f['rating'] }}</span>
+              <span style="color:var(--muted);font-size:0.75rem;margin-left:0.25rem">{{ f['rating'] }}/5</span>
+            </div>
+          </div>
+          {% if f['comment'] %}
+          <p style="color:var(--muted);font-size:0.875rem;line-height:1.65;margin:0.4rem 0 0.3rem 0;padding-left:2.4rem">{{ f['comment'] }}</p>
+          {% endif %}
+          <div style="color:var(--muted);font-size:0.72rem;padding-left:2.4rem">{{ f['created_at'][:10] }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="text-align:center;padding:2.5rem 1rem;color:var(--muted)">
+        <div style="font-size:2.5rem;margin-bottom:0.5rem">💬</div>
+        <div style="font-size:0.9rem">No reviews yet — be the first!</div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% block scripts %}
+<script>
+var msgs = ['','Poor 😕','Fair 😐','Good 👍','Great 😊','Excellent! 🌟'];
+var current = 3;
+
+function setVisual(val) {
+  for (var i = 1; i <= 5; i++) {
+    var em = document.getElementById('star-em-' + i);
+    if (em) em.textContent = i <= val ? '⭐' : '☆';
+  }
+  var lbl = document.getElementById('star-label');
+  if (lbl) lbl.textContent = val + '/5 — ' + msgs[val];
+}
+
+function hoverStar(val) { setVisual(val); }
+function resetStar()    { setVisual(current); }
+function selectStar(val) {
+  current = val;
+  document.getElementById('star' + val).checked = true;
+  setVisual(val);
+}
+
+// Init
+setVisual(current);
+</script>
+{% endblock %}
+{% endblock %}

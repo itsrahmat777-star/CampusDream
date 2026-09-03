@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:2rem">
+    <div>
+      <div class="section-title">Admin Dashboard</div>
+      <div class="section-sub">Welcome back, {{ session.name }}</div>
+    </div>
+    <div class="tab-bar">
+      <a href="/admin" class="tab active">Dashboard</a>
+      <a href="/admin/events" class="tab">Events</a>
+      <a href="/admin/proposals" class="tab">Proposals{% if stats.proposals > 0 %} <span style="background:#fbbf24;color:#0f0f13;border-radius:99px;padding:1px 7px;font-size:0.7rem;font-weight:700">{{ stats.proposals }}</span>{% endif %}</a>
+      <a href="/admin/users" class="tab">Users</a>
+      <a href="/admin/analytics" class="tab">Analytics</a>
+    </div>
+  </div>
+
+  <div class="grid-4" style="margin-bottom:2rem">
+    {% for icon,bg,num,label in [
+      ('🎓','rgba(167,139,250,0.15)',stats.students,'Students'),
+      ('📅','rgba(52,211,153,0.15)',stats.upcoming,'Upcoming Events'),
+      ('🎟️','rgba(96,165,250,0.15)',stats.regs,'Registrations'),
+      ('💡','rgba(251,191,36,0.15)',stats.proposals,'Pending Proposals')
+    ] %}
+    <div class="stat-card">
+      <div class="stat-icon" style="background:{{ bg }}">{{ icon }}</div>
+      <div><div class="stat-num">{{ num }}</div><div class="stat-label">{{ label }}</div></div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="grid-2" style="margin-bottom:1.5rem">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+        <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600">Recent Events</h3>
+        <a href="/admin/add_event" class="btn btn-primary btn-sm">+ Add Event</a>
+      </div>
+      {% for ev in recent_events %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div>
+          <div style="font-weight:500;font-size:0.9rem">{{ ev['title'] }}</div>
+          <span class="badge badge-{{ ev['category']|lower }}" style="font-size:0.65rem;margin-top:2px">{{ ev['category'] }}</span>
+        </div>
+        <a href="/admin/edit_event/{{ ev['id'] }}" style="color:var(--aurora1);font-size:0.8rem;text-decoration:none">Edit</a>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem">
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;margin-bottom:1.2rem">Most Popular</h3>
+      {% for ev in top_events %}
+      <div style="padding:0.6rem 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.3rem">
+          <span style="font-size:0.875rem;font-weight:500">{{ ev['title'] }}</span>
+          <span style="color:var(--aurora1);font-weight:700">{{ ev['cnt'] }}</span>
+        </div>
+        <div class="progress-wrap"><div class="progress-fill" style="width:{{ [ev['cnt']*10,100]|min }}%"></div></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if pending_props %}
+  <div style="background:var(--card);border:1px solid rgba(251,191,36,0.25);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600">💡 Pending Proposals</h3>
+      <a href="/admin/proposals" class="btn btn-ghost btn-sm">View All →</a>
+    </div>
+    {% for p in pending_props %}
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+      <div>
+        <div style="font-weight:500;font-size:0.9rem">{{ p['title'] }}</div>
+        <div style="font-size:0.78rem;color:var(--muted)">by {{ p['student_name'] }} · {{ p['created_at'][:10] }}</div>
+      </div>
+      <a href="/admin/proposals" class="btn btn-ghost btn-sm">Review</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Quick Broadcast -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem">
+    <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;margin-bottom:0.4rem">📢 Quick Broadcast</h3>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem">Send an announcement to all students or specific event registrants.</p>
+    <a href="/message/send" class="btn btn-primary btn-sm">Compose Message →</a>
+    <a href="/inbox" class="btn btn-ghost btn-sm" style="margin-left:0.5rem">
+      View Inbox {% if stats.unread > 0 %}<span style="background:#f87171;color:#fff;border-radius:99px;padding:1px 7px;font-size:0.7rem">{{ stats.unread }}</span>{% endif %}
+    </a>
+  </div>
+</div>
+{% endblock %}

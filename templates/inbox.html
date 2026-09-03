@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Inbox{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem;max-width:860px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:2rem">
+    <div>
+      <div class="section-title">📬 Inbox</div>
+      <div class="section-sub">{{ messages|length }} message(s){% if unread %} · <span style="color:var(--aurora3)">{{ unread }} unread</span>{% endif %}</div>
+    </div>
+    <a href="/message/send" class="btn btn-primary btn-sm">✉️ New Message</a>
+  </div>
+
+  {% if messages %}
+    {% for m in messages %}
+    <div class="msg-card {{ 'unread' if not m['is_read'] }}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem">
+        <div>
+          {% if not m['is_read'] %}<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--aurora1);margin-right:6px;vertical-align:middle"></span>{% endif %}
+          <span style="font-weight:600;color:var(--text)">{{ m['subject'] }}</span>
+        </div>
+        <span style="font-size:0.75rem;color:var(--muted)">{{ m['created_at'][:16] }}</span>
+      </div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.6rem">
+        From: <span style="color:var(--aurora2)">{{ m['sender_name'] }}</span>
+        {% if m['sender_phone'] %}
+        &nbsp;·&nbsp; 📱 <span style="color:var(--text);font-weight:600">+91 {{ m['sender_phone'] }}</span>
+        {% endif %}
+        {% if m['event_title'] %} &nbsp;·&nbsp; Event: <span style="color:var(--aurora1)">{{ m['event_title'] }}</span>{% endif %}
+      </div>
+      <p style="font-size:0.875rem;color:var(--muted);line-height:1.6;margin-bottom:0.8rem">{{ m['body'] }}</p>
+      {% if not m['is_read'] %}
+      <a href="/message/read/{{ m['id'] }}" class="btn btn-ghost btn-sm">Mark as Read</a>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div style="text-align:center;padding:5rem 2rem;color:var(--muted)">
+      <div style="font-size:3rem;margin-bottom:1rem">📭</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--text);margin-bottom:0.5rem">Your inbox is empty</div>
+      <div>Messages from admin and other students will appear here.</div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

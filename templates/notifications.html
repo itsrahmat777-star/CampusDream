@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem;max-width:760px">
+  <div class="section-title">🔔 Notifications</div>
+  <div class="section-sub">Your recent activity and announcements</div>
+  {% if notifs %}
+    {% for n in notifs %}
+    <div style="background:var(--card);border:1px solid {% if not n['is_read'] %}rgba(167,139,250,0.4){% else %}var(--border){% endif %};border-radius:14px;padding:1rem 1.4rem;margin-bottom:0.6rem;display:flex;justify-content:space-between;align-items:flex-start;gap:1rem{% if not n['is_read'] %};background:rgba(167,139,250,0.04){% endif %}">
+      <div>
+        {% if not n['is_read'] %}<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--aurora1);margin-right:6px;vertical-align:middle"></span>{% endif %}
+        <span style="font-size:0.875rem;color:var(--text)">{{ n['message'] }}</span>
+        {% if n['link'] %}<a href="{{ n['link'] }}" style="color:var(--aurora1);font-size:0.8rem;margin-left:0.5rem;text-decoration:none">View →</a>{% endif %}
+        <div style="color:var(--muted);font-size:0.75rem;margin-top:0.25rem">{{ n['created_at'][:16] }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div style="text-align:center;padding:5rem 2rem;color:var(--muted)">
+      <div style="font-size:3rem;margin-bottom:1rem">🔔</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--text);margin-bottom:0.5rem">All caught up!</div>
+      <div>No notifications yet.</div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

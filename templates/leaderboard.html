@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem;max-width:860px">
+  <div class="section-title">🏆 Student Leaderboard</div>
+  <div class="section-sub">Top students ranked by points earned through registrations, attendance, and reviews</div>
+
+  <div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:14px;padding:1rem 1.4rem;margin-bottom:1.5rem;font-size:0.85rem;color:var(--muted)">
+    🎯 Earn points: <span style="color:var(--gold)">+10</span> Register &nbsp;·&nbsp; <span style="color:var(--gold)">+20</span> Attend &nbsp;·&nbsp; <span style="color:var(--gold)">+5</span> Review &nbsp;·&nbsp; <span style="color:var(--gold)">+15</span> Proposal approved
+  </div>
+
+  {% for s in students %}
+  {% set rank = loop.index %}
+  <div style="background:var(--card);border:1px solid {% if rank==1 %}rgba(251,191,36,0.5){% elif rank==2 %}rgba(167,139,250,0.35){% elif rank==3 %}rgba(96,165,250,0.3){% else %}var(--border){% endif %};border-radius:16px;padding:1.2rem 1.5rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1.2rem">
+    <div style="font-size:{% if rank<=3 %}1.8rem{% else %}1.1rem{% endif %};width:40px;text-align:center;font-weight:700;color:{% if rank==1 %}#fbbf24{% elif rank==2 %}#a78bfa{% elif rank==3 %}#60a5fa{% else %}var(--muted){% endif %}">
+      {% if rank==1 %}🥇{% elif rank==2 %}🥈{% elif rank==3 %}🥉{% else %}#{{ rank }}{% endif %}
+    </div>
+    <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--aurora1),var(--aurora3));display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:1rem;flex-shrink:0">
+      {{ s['name'][0].upper() }}
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:600;font-size:0.95rem">{{ s['name'] }}</div>
+      {% if s['bio'] %}<div style="color:var(--muted);font-size:0.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s['bio'] }}</div>{% endif %}
+      <div style="display:flex;gap:1rem;margin-top:0.3rem">
+        <span style="color:var(--muted);font-size:0.75rem">🎟️ {{ s['event_count'] }} events</span>
+        <span style="color:var(--muted);font-size:0.75rem">⭐ {{ s['review_count'] }} reviews</span>
+      </div>
+    </div>
+    <div style="text-align:right;flex-shrink:0">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:600;color:{% if rank==1 %}#fbbf24{% elif rank<=3 %}var(--aurora1){% else %}var(--text){% endif %}">{{ s['points'] }}</div>
+      <div style="color:var(--muted);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em">points</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

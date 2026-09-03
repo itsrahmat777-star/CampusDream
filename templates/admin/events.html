@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Manage Events{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem">
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:2rem">
+    <div>
+      <div class="section-title">Manage Events</div>
+      <div class="section-sub">{{ events|length }} total events</div>
+    </div>
+    <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
+      <div class="tab-bar">
+        <a href="/admin" class="tab">Dashboard</a>
+        <a href="/admin/events" class="tab active">Events</a>
+        <a href="/admin/proposals" class="tab">Proposals</a>
+        <a href="/admin/users" class="tab">Users</a>
+        <a href="/admin/analytics" class="tab">Analytics</a>
+      </div>
+      <a href="/admin/add_event" class="btn btn-primary btn-sm">+ Add Event</a>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th><th>Category</th><th>Date</th><th>Venue</th>
+          <th>Registered</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in events %}
+        {% set ev = item.ev %}
+        {% set cnt = item.count %}
+        {% set cat = ev.category|lower %}
+        <tr>
+          <td>
+            <a href="/event/{{ ev.id }}" style="color:var(--text);text-decoration:none;font-weight:500">{{ ev.title }}</a>
+          </td>
+          <td><span class="badge badge-{{ cat }}">{{ ev.category }}</span></td>
+          <td style="color:var(--muted)">{{ ev.event_date or '—' }}</td>
+          <td style="color:var(--muted);font-size:0.82rem">{{ ev.venue or '—' }}</td>
+          <td>
+            <span style="color:{% if cnt >= ev.max_participants %}#f87171{% else %}var(--aurora4){% endif %};font-weight:600">
+              {{ cnt }}/{{ ev.max_participants }}
+            </span>
+          </td>
+          <td>
+            <span style="padding:3px 10px;border-radius:99px;font-size:0.72rem;font-weight:600;
+              background:{% if ev.status=='upcoming' %}rgba(52,211,153,0.12){% elif ev.status=='completed' %}rgba(96,165,250,0.12){% else %}rgba(248,113,113,0.12){% endif %};
+              color:{% if ev.status=='upcoming' %}#34d399{% elif ev.status=='completed' %}#60a5fa{% else %}#f87171{% endif %}">
+              {{ ev.status.title() }}
+            </span>
+          </td>
+          <td>
+            <div style="display:flex;gap:0.5rem">
+              <a href="/admin/edit_event/{{ ev.id }}" class="btn btn-ghost btn-sm">Edit</a>
+              <a href="/admin/attendance/{{ ev.id }}" class="btn btn-ghost btn-sm" style="color:var(--aurora4);border-color:rgba(52,211,153,0.3)">📋 Attendance</a>
+              <form method="POST" action="/admin/delete_event/{{ ev.id }}" style="display:inline">
+                <button class="btn btn-danger btn-sm" type="submit" onclick="return confirm('Delete this event?')">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

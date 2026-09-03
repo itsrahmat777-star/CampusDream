@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if edit else 'Add' }} Event{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem;max-width:720px">
+
+  <a href="/admin/events" style="color:var(--muted);text-decoration:none;font-size:0.85rem;display:inline-flex;align-items:center;gap:0.4rem;margin-bottom:1.5rem">← Back to Events</a>
+
+  <div class="section-title">{{ 'Edit Event' if edit else 'Add New Event' }}</div>
+  <div class="section-sub">Fill in the details below</div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem">
+    <!-- enctype MUST be multipart/form-data for file uploads -->
+    <form method="POST" enctype="multipart/form-data">
+      <div class="grid-2">
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Event Title *</label>
+          <input class="form-input" type="text" name="title" required value="{{ ev.title if ev else '' }}" placeholder="Enter event title"/>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" name="description" placeholder="What is this event about?">{{ ev.description if ev else '' }}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Event Date *</label>
+          <input class="form-input" type="date" name="event_date" required value="{{ ev.event_date if ev else '' }}"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Event Time</label>
+          <input class="form-input" type="time" name="event_time" value="{{ ev.event_time if ev else '09:00' }}"/>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Venue</label>
+          <input class="form-input" type="text" name="venue" placeholder="Enter venue name and location" value="{{ ev.venue if ev else '' }}"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max Participants</label>
+          <input class="form-input" type="number" name="max_participants" min="1" value="{{ ev.max_participants if ev else 50 }}"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" name="category">
+            {% for cat in ['Technical','Cultural','Sports','Arts','General'] %}
+            <option value="{{ cat }}" {% if ev and ev.category==cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" name="status">
+            {% for s in ['upcoming','completed','cancelled'] %}
+            <option value="{{ s }}" {% if ev and ev.status==s %}selected{% endif %}>{{ s.title() }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- ── Image Upload Section ───────────────────────────────── -->
+      <div style="border:1px solid var(--border);border-radius:14px;padding:1.4rem;margin-top:0.5rem;background:rgba(109,40,217,0.04)">
+        <div style="font-weight:600;color:var(--text);margin-bottom:0.3rem;font-size:0.9rem">🖼️ Event Image</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1.2rem">Upload a photo from your computer <strong>or</strong> paste an image URL. Uploaded file takes priority.</div>
+
+        <!-- Current image preview -->
+        {% if ev and ev.image_url %}
+        <div style="margin-bottom:1rem">
+          <div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.4rem;text-transform:uppercase;letter-spacing:0.06em">Current Image</div>
+          <div style="border-radius:10px;overflow:hidden;height:140px;border:1px solid var(--border)">
+            <img id="current-preview" src="{{ ev.image_url }}" alt="current"
+                 style="width:100%;height:100%;object-fit:cover"
+                 onerror="this.parentElement.innerHTML='<div style=\'height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.8rem\'>⚠️ Current image not loading</div>'"/>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Tab switcher -->
+        <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
+          <button type="button" id="tab-upload" onclick="switchTab('upload')"
+                  style="flex:1;padding:0.5rem;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.2s;border:1px solid var(--aurora1);background:linear-gradient(135deg,var(--aurora1),var(--aurora2));color:#fff">
+            📁 Upload from Computer
+          </button>
+          <button type="button" id="tab-url" onclick="switchTab('url')"
+                  style="flex:1;padding:0.5rem;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.2s;border:1px solid var(--border);background:transparent;color:var(--muted)">
+            🔗 Paste Image URL
+          </button>
+        </div>
+
+        <!-- Upload panel -->
+        <div id="panel-upload">
+          <div id="drop-zone"
+               onclick="document.getElementById('image_file').click()"
+               ondragover="event.preventDefault(); this.style.borderColor='var(--aurora1)'; this.style.background='rgba(109,40,217,0.08)'"
+               ondragleave="this.style.borderColor='var(--border)'; this.style.background='transparent'"
+               ondrop="handleDrop(event)"
+               style="border:2px dashed var(--border);border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:all 0.2s;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem">
+            <div style="font-size:2.5rem" id="drop-icon">📂</div>
+            <div style="font-weight:600;color:var(--text);font-size:0.9rem">Click to browse or drag & drop</div>
+            <div style="color:var(--muted);font-size:0.75rem">PNG, JPG, JPEG, WEBP, GIF — max 10 MB</div>
+            <div style="color:var(--muted);font-size:0.72rem;margin-top:0.2rem">Image auto-resizes to 1200px wide</div>
+          </div>
+          <input type="file" id="image_file" name="image_file" accept="image/*"
+                 style="display:none" onchange="previewFile(this)"/>
+
+          <!-- Upload preview -->
+          <div id="upload-preview" style="display:none;margin-top:0.75rem">
+            <div style="border-radius:10px;overflow:hidden;height:150px;border:1px solid var(--border);position:relative">
+              <img id="preview-img" src="" alt="preview" style="width:100%;height:100%;object-fit:cover"/>
+              <div style="position:absolute;top:0.5rem;right:0.5rem">
+                <button type="button" onclick="clearUpload()"
+                        style="background:rgba(248,113,113,0.85);color:#fff;border:none;border-radius:6px;padding:0.25rem 0.6rem;font-size:0.75rem;cursor:pointer;font-weight:600">✕ Remove</button>
+              </div>
+              <div id="file-name-label"
+                   style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:#fff;font-size:0.72rem;padding:0.3rem 0.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+            </div>
+            <div style="margin-top:0.4rem;font-size:0.75rem;color:var(--aurora4)">✅ File ready to upload — will be saved when you submit the form</div>
+          </div>
+        </div>
+
+        <!-- URL panel -->
+        <div id="panel-url" style="display:none">
+          <div class="form-group" style="margin-bottom:0.5rem">
+            <input class="form-input" type="url" name="image_url" id="image_url_input"
+                   placeholder="https://images.unsplash.com/photo-… or any direct image URL"
+                   value="{{ ev.image_url if ev and not ev.image_url.startswith('/static') else '' }}"
+                   oninput="previewUrl(this.value)"/>
+          </div>
+          <div id="url-preview" style="display:{% if ev and ev.image_url and not ev.image_url.startswith('/static') %}block{% else %}none{% endif %};border-radius:10px;overflow:hidden;height:140px;border:1px solid var(--border);margin-top:0.5rem">
+            <img id="url-preview-img"
+                 src="{{ ev.image_url if ev and ev.image_url else '' }}"
+                 alt="URL preview" style="width:100%;height:100%;object-fit:cover"
+                 onerror="document.getElementById('url-preview').style.display='none'"/>
+          </div>
+          <div style="margin-top:0.6rem;font-size:0.75rem;color:var(--muted)">
+            💡 Tip: Go to Google Images → right-click any image → <strong>Copy image address</strong> → paste here
+          </div>
+        </div>
+      </div>
+      <!-- ── End Image Section ───────────────────────────────────── -->
+
+      <div style="display:flex;gap:0.75rem;margin-top:1.5rem">
+        <button class="btn btn-primary" type="submit">{{ '💾 Save Changes' if edit else '➕ Add Event' }}</button>
+        <a href="/admin/events" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% block scripts %}
+<script>
+// ── Tab switcher ──────────────────────────────────────────────
+function switchTab(tab) {
+  var isUpload = tab === 'upload';
+  document.getElementById('panel-upload').style.display = isUpload ? 'block' : 'none';
+  document.getElementById('panel-url').style.display    = isUpload ? 'none' : 'block';
+
+  var tabUpload = document.getElementById('tab-upload');
+  var tabUrl    = document.getElementById('tab-url');
+  var activeStyle   = 'background:linear-gradient(135deg,var(--aurora1),var(--aurora2));color:#fff;border-color:var(--aurora1)';
+  var inactiveStyle = 'background:transparent;color:var(--muted);border-color:var(--border)';
+
+  tabUpload.style.cssText += isUpload ? activeStyle : inactiveStyle;
+  tabUrl.style.cssText    += isUpload ? inactiveStyle : activeStyle;
+
+  // If switching to URL tab, clear any file selection
+  if (!isUpload) {
+    clearUpload();
+  }
+}
+
+// ── File preview ──────────────────────────────────────────────
+function previewFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+
+  // Validate type
+  var validTypes = ['image/png','image/jpeg','image/jpg','image/gif','image/webp','image/bmp'];
+  if (!validTypes.includes(file.type)) {
+    alert('❌ Invalid file type. Please select PNG, JPG, JPEG, WEBP, GIF, or BMP.');
+    input.value = '';
+    return;
+  }
+  // Validate size (10MB)
+  if (file.size > 10 * 1024 * 1024) {
+    alert('❌ File too large. Maximum size is 10 MB.');
+    input.value = '';
+    return;
+  }
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('preview-img').src = e.target.result;
+    document.getElementById('file-name-label').textContent = '📎 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
+    document.getElementById('upload-preview').style.display = 'block';
+    document.getElementById('drop-zone').style.display      = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearUpload() {
+  document.getElementById('image_file').value = '';
+  document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('drop-zone').style.display      = 'flex';
+}
+
+// ── Drag & drop ────────────────────────────────────────────────
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').style.borderColor = 'var(--border)';
+  document.getElementById('drop-zone').style.background  = 'transparent';
+  var file = e.dataTransfer.files[0];
+  if (!file) return;
+  var input = document.getElementById('image_file');
+  var dt = new DataTransfer();
+  dt.items.add(file);
+  input.files = dt.files;
+  previewFile(input);
+}
+
+// ── URL preview ────────────────────────────────────────────────
+function previewUrl(val) {
+  var preview = document.getElementById('url-preview');
+  var img     = document.getElementById('url-preview-img');
+  if (val && val.startsWith('http')) {
+    img.src = val;
+    preview.style.display = 'block';
+    img.onerror = function() { preview.style.display = 'none'; };
+    img.onload  = function() { preview.style.display = 'block'; };
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+// ── Auto-switch tab based on existing data ─────────────────────
+window.addEventListener('DOMContentLoaded', function() {
+  var urlInput = document.getElementById('image_url_input');
+  if (urlInput && urlInput.value && urlInput.value.startsWith('http')) {
+    switchTab('url');
+  }
+});
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem">
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:2rem">
+    <div>
+      <div class="section-title">Analytics</div>
+      <div class="section-sub">Event performance & registration insights</div>
+    </div>
+    <div class="tab-bar">
+      <a href="/admin" class="tab">Dashboard</a>
+      <a href="/admin/events" class="tab">Events</a>
+      <a href="/admin/users" class="tab">Users</a>
+      <a href="/admin/analytics" class="tab active">Analytics</a>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:2rem">
+    <!-- Registrations chart -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem">
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;margin-bottom:1.2rem">Registrations per Event</h3>
+      <canvas id="regsChart" height="220"></canvas>
+    </div>
+    <!-- Category chart -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem">
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;margin-bottom:1.2rem">Events by Category</h3>
+      <canvas id="catChart" height="220"></canvas>
+    </div>
+  </div>
+
+  <!-- Registration table -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;flex-wrap:wrap;gap:0.5rem">
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600">All Registrations</h3>
+      <a href="/admin/export_csv" class="btn btn-ghost btn-sm">⬇️ Export CSV</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Student</th><th>Email</th><th>Event</th><th>Event Date</th><th>Venue</th><th>Registered</th></tr></thead>
+        <tbody>
+          {% for r in all_regs %}
+          <tr>
+            <td style="font-weight:500">{{ r['name'] }}</td>
+            <td style="color:var(--muted);font-size:0.82rem">{{ r['email'] }}</td>
+            <td>{{ r['title'] }}</td>
+            <td style="color:var(--muted);font-size:0.82rem">{{ r['event_date'] or '—' }}</td>
+            <td style="color:var(--muted);font-size:0.82rem">{{ r['venue'] or '—' }}</td>
+            <td style="color:var(--muted);font-size:0.82rem">{{ r['registered_at'][:10] }}</td>
+          </tr>
+          {% endfor %}
+          {% if not all_regs %}
+          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">No registrations yet.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const chartDefaults = {
+  color: '#8b89a8',
+  borderColor: 'rgba(255,255,255,0.06)',
+  plugins: { legend: { labels: { color: '#8b89a8', font: { family: 'Outfit' } } } },
+  scales: {
+    x: { ticks: { color: '#8b89a8' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+    y: { ticks: { color: '#8b89a8' }, grid: { color: 'rgba(255,255,255,0.04)' } }
+  }
+};
+
+// Registrations chart
+const regData = {{ reg_data | tojson }};
+new Chart(document.getElementById('regsChart'), {
+  type: 'bar',
+  data: {
+    labels: regData.map(d => d[0].length > 20 ? d[0].slice(0,20)+'…' : d[0]),
+    datasets: [{
+      label: 'Registrations',
+      data: regData.map(d => d[2]),
+      backgroundColor: 'rgba(167,139,250,0.3)',
+      borderColor: 'rgba(167,139,250,0.8)',
+      borderWidth: 1, borderRadius: 6,
+    }]
+  },
+  options: { ...chartDefaults, plugins: { ...chartDefaults.plugins, legend: { display: false } } }
+});
+
+// Category chart
+const catData = {{ cat_data | tojson }};
+const catColors = ['rgba(96,165,250,0.7)','rgba(244,114,182,0.7)','rgba(52,211,153,0.7)','rgba(251,191,36,0.7)','rgba(167,139,250,0.7)'];
+new Chart(document.getElementById('catChart'), {
+  type: 'doughnut',
+  data: {
+    labels: catData.map(d => d[0]),
+    datasets: [{
+      data: catData.map(d => d[1]),
+      backgroundColor: catColors,
+      borderColor: 'rgba(0,0,0,0.3)',
+      borderWidth: 2,
+    }]
+  },
+  options: {
+    plugins: { legend: { labels: { color: '#8b89a8', font: { family: 'Outfit' } } } },
+    cutout: '65%',
+  }
+});
+</script>
+{% endblock %}

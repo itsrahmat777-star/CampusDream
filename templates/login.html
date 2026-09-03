@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:2rem">
+  <div style="width:100%;max-width:420px">
+
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="font-size:2.5rem;margin-bottom:0.5rem">✦</div>
+      <h1 style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:400;color:var(--text);margin-bottom:0.3rem">Welcome Back</h1>
+      <p style="color:var(--muted);font-size:0.9rem">Sign in to your DreamCampus account</p>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem">
+      <form method="POST" action="/login">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" name="email" placeholder="Enter your email" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" name="password" placeholder="Enter your password" required/>
+        </div>
+        <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center;margin-top:0.5rem;font-size:1rem;padding:0.8rem">Sign In →</button>
+      </form>
+
+      <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);text-align:center">
+        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:0.5rem">Don't have an account?</p>
+        <a href="/register" style="color:var(--aurora1);font-weight:600;text-decoration:none">Create one free →</a>
+      </div>
+    </div>
+
+    <!-- Demo creds - subtle toggle -->
+    <div style="margin-top:1rem;text-align:center">
+      <button onclick="document.getElementById('demo-box').style.display=document.getElementById('demo-box').style.display==='none'?'block':'none'"
+        style="background:none;border:none;color:var(--muted);font-size:0.78rem;cursor:pointer;text-decoration:underline;font-family:'Outfit',sans-serif">
+        Show demo credentials
+      </button>
+      <div id="demo-box" style="display:none;margin-top:0.75rem;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.2);border-radius:12px;padding:0.9rem 1.2rem;font-size:0.8rem;text-align:left">
+        <div style="color:var(--muted);line-height:2.2">
+          <b style="color:var(--text)">Admin:</b> admin@dream.edu &nbsp;/&nbsp; admin123<br/>
+          <b style="color:var(--text)">Student:</b> arjun@dream.edu &nbsp;/&nbsp; student123
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

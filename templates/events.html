@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Events{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem">
+
+  <div class="section-title">Explore Events</div>
+  <div class="section-sub">Find your next great campus experience across Hyderabad</div>
+
+  <!-- Filter bar -->
+  <form method="GET" action="/events" style="display:flex;gap:0.75rem;margin-bottom:2.5rem;flex-wrap:wrap;align-items:center">
+    <input class="form-input" name="q" value="{{ search }}" placeholder="🔍  Search events, venues…" style="max-width:280px"/>
+    <select class="form-select" name="category" style="max-width:180px" onchange="this.form.submit()">
+      {% for cat in ['All','Technical','Cultural','Sports','Arts','General'] %}
+      <option value="{{ cat }}" {% if category==cat %}selected{% endif %}>{{ cat }}</option>
+      {% endfor %}
+    </select>
+    <select class="form-select" name="sort" style="max-width:170px" onchange="this.form.submit()">
+      <option value="date" {% if sort=='date' %}selected{% endif %}>Sort: Date</option>
+      <option value="popular" {% if sort=='popular' %}selected{% endif %}>Sort: Popular</option>
+    </select>
+    <button class="btn btn-primary btn-sm" type="submit">Search</button>
+    {% if search or category!='All' %}
+    <a href="/events" class="btn btn-ghost btn-sm">✕ Clear</a>
+    {% endif %}
+  </form>
+
+  {% if events %}
+  <div class="grid-3">
+    {% for item in events %}
+    {% set ev = item.ev %}
+    {% set cnt = item.count %}
+    {% set pct = (cnt / ev.max_participants * 100)|int if ev.max_participants else 0 %}
+    {% set remaining = ev.max_participants - cnt %}
+    {% set cat = ev.category|lower %}
+
+    <a href="/event/{{ ev.id }}" class="event-card" style="animation:fadeUp 0.4s {{ loop.index0*0.06 }}s ease both">
+
+      <!-- Venue Image -->
+      <div class="venue-img-wrap">
+        {% if ev.image_url %}
+          <img class="venue-img"
+               src="{{ ev.image_url }}"
+               alt="{{ ev.venue }}"
+               onerror="this.onerror=null; this.src='{{ ev.fallback_image or '' }}';"
+               loading="lazy"/>
+        {% else %}
+          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(96,165,250,0.1));font-size:2.5rem">
+            {% if cat=='technical' %}💻{% elif cat=='cultural' %}🎭{% elif cat=='sports' %}🏅{% elif cat=='arts' %}🎨{% else %}✦{% endif %}
+          </div>
+        {% endif %}
+        <div class="img-overlay"></div>
+        <!-- Category badge pinned to image -->
+        <span class="badge badge-{{ cat }}" style="position:absolute;top:0.75rem;left:0.75rem;backdrop-filter:blur(8px);background:rgba(0,0,0,0.4);color:#fff;border-color:rgba(255,255,255,0.25)">{{ ev.category }}</span>
+        <!-- Spots left pill -->
+        <span style="position:absolute;top:0.75rem;right:0.75rem;padding:3px 10px;border-radius:99px;font-size:0.7rem;font-weight:700;backdrop-filter:blur(8px);
+          background:{% if remaining<=0 %}rgba(248,113,113,0.6){% elif remaining<=10 %}rgba(251,191,36,0.6){% else %}rgba(52,211,153,0.5){% endif %};
+          color:#fff;border:1px solid rgba(255,255,255,0.2)">
+          {% if remaining<=0 %}Full{% else %}{{ remaining }} left{% endif %}
+        </span>
+      </div>
+
+      <div class="event-card-body">
+        <div class="event-card-title">{{ ev.title }}</div>
+        <div class="event-card-meta">📅 {{ ev.event_date or 'TBD' }} &nbsp;·&nbsp; ⏰ {{ ev.event_time or '' }}</div>
+        <div class="event-card-meta" style="margin-top:-0.2rem">📍 {{ (ev.venue or 'TBD')[:50] }}{% if ev.venue and ev.venue|length > 50 %}…{% endif %}</div>
+        <div class="event-card-desc">{{ ev.description or '' }}</div>
+        <div class="progress-wrap" style="margin-top:0.9rem">
+          <div class="progress-fill" style="width:{{ [pct,100]|min }}%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:0.4rem">
+          <span style="color:var(--muted);font-size:0.75rem">{{ cnt }}/{{ ev.max_participants }} registered</span>
+          <span style="color:var(--aurora1);font-size:0.8rem;font-weight:600">View →</span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:5rem 2rem;color:var(--muted)">
+    <div style="font-size:3rem;margin-bottom:1rem">✦</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;margin-bottom:0.5rem;color:var(--text)">No events found</div>
+    <div>Try a different search or category filter.</div>
+  </div>
+  {% endif %}
+</div>
+<style>@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}</style>
+{% endblock %}

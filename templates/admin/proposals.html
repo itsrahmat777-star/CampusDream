@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Event Proposals{% block scripts %}
+<script>
+function proposalPreview(input, pid) {
+  var file = input.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { alert('File too large (max 10MB)'); input.value=''; return; }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('prop-img-' + pid).src = e.target.result;
+    document.getElementById('prop-preview-' + pid).style.display = 'block';
+    document.getElementById('prop-filename-' + pid).textContent = '📎 ' + file.name;
+  };
+  reader.readAsDataURL(file);
+}
+function proposalUrlPreview(input, pid) {
+  var val = input.value.trim();
+  var preview = document.getElementById('prop-preview-' + pid);
+  var img     = document.getElementById('prop-img-' + pid);
+  if (val.startsWith('http')) {
+    img.src = val;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+</script>
+{% endblock %}
+{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:2rem">
+    <div>
+      <div class="section-title">💡 Event Proposals</div>
+      <div class="section-sub">Review and approve student-submitted event ideas</div>
+    </div>
+    <div class="tab-bar">
+      <a href="/admin" class="tab">Dashboard</a>
+      <a href="/admin/events" class="tab">Events</a>
+      <a href="/admin/proposals" class="tab active">Proposals</a>
+      <a href="/admin/users" class="tab">Users</a>
+      <a href="/admin/analytics" class="tab">Analytics</a>
+    </div>
+  </div>
+
+  {% if proposals %}
+    {% for p in proposals %}
+    <div style="background:var(--card);border:1px solid {% if p['status']=='pending' %}rgba(251,191,36,0.3){% elif p['status']=='approved' %}rgba(52,211,153,0.3){% else %}rgba(248,113,113,0.2){% endif %};border-radius:16px;padding:1.5rem;margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.75rem;margin-bottom:0.75rem">
+        <div>
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;color:var(--text);margin-bottom:0.2rem">{{ p['title'] }}</h3>
+          <div style="font-size:0.8rem;color:var(--muted)">
+            By <span style="color:var(--aurora2)">{{ p['student_name'] }}</span>
+            ({{ p['student_email'] }})
+            {% if p['student_phone'] %}
+            &nbsp;·&nbsp; 📱 <span style="color:var(--text);font-weight:600">+91 {{ p['student_phone'] }}</span>
+            <span style="padding:1px 6px;border-radius:99px;font-size:0.65rem;font-weight:600;background:rgba(52,211,153,0.12);color:var(--aurora4);border:1px solid rgba(52,211,153,0.25)">✓</span>
+            {% else %}
+            &nbsp;·&nbsp; <span style="color:#f87171">no mobile on file</span>
+            {% endif %}
+            &nbsp;·&nbsp; Submitted {{ p['created_at'][:10] }}
+          </div>
+        </div>
+        <span class="badge badge-{{ p['status'] }}">{{ p['status'].upper() }}</span>
+      </div>
+
+      <p style="color:var(--muted);font-size:0.875rem;line-height:1.6;margin-bottom:1rem">{{ p['description'] }}</p>
+
+      <div style="display:flex;gap:1.5rem;flex-wrap:wrap;font-size:0.8rem;color:var(--muted);margin-bottom:1rem">
+        {% if p['proposed_date'] %}<span>📅 {{ p['proposed_date'] }} {{ p['proposed_time'] or '' }}</span>{% endif %}
+        {% if p['venue'] %}<span>📍 {{ p['venue'] }}</span>{% endif %}
+        <span>👥 {{ p['expected_participants'] }} expected</span>
+        <span class="badge badge-{{ p['category']|lower }}">{{ p['category'] }}</span>
+      </div>
+
+      {% if p['status'] == 'pending' %}
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
+        <form method="POST" action="/admin/proposals/{{ p['id'] }}/approve"
+              enctype="multipart/form-data"
+              style="background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:12px;padding:1rem;flex:1;min-width:280px">
+          <div style="font-size:0.78rem;font-weight:600;color:var(--aurora4);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.06em">✓ Approve & Publish</div>
+          <div class="form-group" style="margin-bottom:0.6rem">
+            <label style="display:block;font-size:0.73rem;color:var(--muted);margin-bottom:0.3rem">Note to student (optional)</label>
+            <input class="form-input" type="text" name="admin_note"
+                   placeholder="Great idea! We've approved it."
+                   style="padding:0.45rem 0.75rem;font-size:0.82rem"/>
+          </div>
+          <!-- Image upload for the event being published -->
+          <div class="form-group" style="margin-bottom:0.75rem">
+            <label style="display:block;font-size:0.73rem;color:var(--muted);margin-bottom:0.3rem">Event Image (optional)</label>
+            <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+              <label style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.4rem 0.8rem;border-radius:8px;background:rgba(109,40,217,0.1);border:1px solid var(--border);cursor:pointer;font-size:0.78rem;color:var(--aurora1);font-weight:600;white-space:nowrap">
+                📁 Upload Photo
+                <input type="file" name="image_file" accept="image/*"
+                       style="display:none"
+                       onchange="proposalPreview(this, '{{ p['id'] }}')"/>
+              </label>
+              <span style="color:var(--muted);font-size:0.72rem">or</span>
+              <input class="form-input" type="url" name="image_url"
+                     placeholder="Paste image URL"
+                     style="flex:1;min-width:160px;padding:0.4rem 0.7rem;font-size:0.78rem"
+                     oninput="proposalUrlPreview(this, '{{ p['id'] }}')"/>
+            </div>
+            <div id="prop-preview-{{ p['id'] }}"
+                 style="display:none;margin-top:0.5rem;border-radius:8px;overflow:hidden;height:90px;border:1px solid var(--border)">
+              <img id="prop-img-{{ p['id'] }}" src="" alt="preview"
+                   style="width:100%;height:100%;object-fit:cover"
+                   onerror="document.getElementById('prop-preview-{{ p['id'] }}').style.display='none'"/>
+            </div>
+            <div id="prop-filename-{{ p['id'] }}" style="font-size:0.7rem;color:var(--aurora4);margin-top:0.3rem"></div>
+          </div>
+          <button class="btn btn-success btn-sm" type="submit" style="width:100%">✓ Approve & Publish Event</button>
+        </form>
+        <form method="POST" action="/admin/proposals/{{ p['id'] }}/reject" style="display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap">
+          <div>
+            <label style="display:block;font-size:0.75rem;color:var(--muted);margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.05em">Rejection reason</label>
+            <input class="form-input" type="text" name="admin_note" placeholder="Please refine and resubmit." style="width:240px;padding:0.5rem 0.8rem;font-size:0.85rem"/>
+          </div>
+          <button class="btn btn-danger btn-sm" type="submit">✗ Reject</button>
+        </form>
+      </div>
+      {% elif p['admin_note'] %}
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:0.6rem 0.9rem;font-size:0.82rem">
+        <span style="color:var(--aurora1);font-weight:600">Your note: </span>
+        <span style="color:var(--muted)">{{ p['admin_note'] }}</span>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div style="text-align:center;padding:5rem 2rem;color:var(--muted)">
+      <div style="font-size:3rem;margin-bottom:1rem">💡</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--text);margin-bottom:0.5rem">No proposals yet</div>
+      <div>Students can submit event ideas from their dashboard.</div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

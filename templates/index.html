@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+
+<!-- HERO -->
+<section style="min-height:88vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:4rem 1.5rem 2rem">
+  <div>
+    <div style="display:inline-block;padding:4px 14px;border-radius:99px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.25);color:var(--aurora1);font-size:0.78rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:1.5rem;animation:fadeUp 0.6s ease both">
+      ✦ &nbsp; Hyderabad College Event Portal
+    </div>
+    <h1 style="font-family:'Cormorant Garamond',serif;font-size:clamp(3rem,8vw,6rem);font-weight:300;line-height:1.05;color:var(--text);margin-bottom:1rem;animation:fadeUp 0.7s 0.1s ease both">
+      Where Campus Life<br/>
+      <em style="background:linear-gradient(135deg,var(--aurora1),var(--aurora3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-style:italic">Becomes a Dream</em>
+    </h1>
+    <p style="color:var(--muted);font-size:1.1rem;max-width:520px;margin:0 auto 2.5rem;line-height:1.7;animation:fadeUp 0.7s 0.2s ease both">
+      Discover, register, and earn points for events across Hyderabad colleges — hackathons, cultural fests, sports, and more.
+    </p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;animation:fadeUp 0.7s 0.3s ease both">
+      <a href="/events" class="btn btn-primary" style="font-size:1rem;padding:0.8rem 2rem">Explore Events →</a>
+      {% if not session.user_id %}
+      <a href="/register" class="btn btn-ghost" style="font-size:1rem;padding:0.8rem 2rem">Join Free</a>
+      {% else %}
+      <a href="/leaderboard" class="btn btn-ghost" style="font-size:1rem;padding:0.8rem 2rem">🏆 Leaderboard</a>
+      {% endif %}
+    </div>
+
+    <!-- Live stats -->
+    <div style="display:flex;justify-content:center;gap:3rem;margin-top:4rem;animation:fadeUp 0.7s 0.4s ease both;flex-wrap:wrap">
+      {% for num,label,color in [(stats.events,'Upcoming Events','var(--aurora1)'),(stats.students,'Students','var(--aurora3)'),(stats.regs,'Registrations','var(--aurora4)')] %}
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:600;color:{{ color }}">{{ num }}+</div>
+        <div style="color:var(--muted);font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em">{{ label }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Next event countdown -->
+    {% if next_event %}
+    <div style="margin-top:2.5rem;animation:fadeUp 0.7s 0.5s ease both">
+      <div style="display:inline-block;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:14px;padding:0.9rem 1.8rem">
+        <div style="font-size:0.75rem;color:var(--gold);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem">⚡ Next Event</div>
+        <div style="font-weight:600;color:var(--text);font-size:0.95rem">{{ next_event['title'] }}</div>
+        <div style="color:var(--muted);font-size:0.8rem;margin-top:0.2rem">{{ next_event['event_date'] }} · {{ next_event['venue'][:40] }}{% if next_event['venue']|length > 40 %}…{% endif %}</div>
+        <div id="countdown" style="color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;margin-top:0.4rem" data-date="{{ next_event['event_date'] }}T{{ next_event['event_time'] or '00:00' }}"></div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- FEATURES STRIP -->
+<section style="padding:2rem 0 3rem">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+      {% for icon,title,desc in [
+        ('🎟️','Easy Registration','Register for any event in one click'),
+        ('⭐','Earn Points','Get points for every activity you do'),
+        ('🏆','Leaderboard','Compete with students across colleges'),
+        ('💡','Host Events','Propose your own events for approval'),
+        ('✉️','Messaging','Communicate directly with organizers'),
+        ('📊','Analytics','Admins track all event data live')
+      ] %}
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem;text-align:center;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(167,139,250,0.35)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:1.6rem;margin-bottom:0.5rem">{{ icon }}</div>
+        <div style="font-weight:600;font-size:0.9rem;margin-bottom:0.25rem;color:var(--text)">{{ title }}</div>
+        <div style="color:var(--muted);font-size:0.78rem">{{ desc }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- UPCOMING EVENTS -->
+<section style="padding:3rem 0">
+  <div class="container">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem">
+      <div>
+        <div class="section-title">Upcoming Events</div>
+        <div class="section-sub">Don't miss what's happening across Hyderabad campuses</div>
+      </div>
+      <a href="/events" class="btn btn-ghost btn-sm">View All →</a>
+    </div>
+    {% if events %}
+    <div class="grid-3">
+      {% for ev in events %}
+      {% set cat = ev['category']|lower %}
+      <a href="/event/{{ ev['id'] }}" class="event-card" style="animation:fadeUp 0.5s {{ loop.index0 * 0.07 }}s ease both">
+        <!-- Venue image -->
+        <div class="venue-img-wrap">
+          {% if ev['image_url'] %}
+            <img class="venue-img" src="{{ ev['image_url'] }}" alt="{{ ev['venue'] }}" onerror="this.onerror=null; this.src='{{ ev['fallback_image'] or '' }}';" loading="lazy"/>
+          {% else %}
+            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(96,165,250,0.1));font-size:2.5rem">
+              {% if cat=='technical' %}💻{% elif cat=='cultural' %}🎭{% elif cat=='sports' %}🏅{% elif cat=='arts' %}🎨{% else %}✦{% endif %}
+            </div>
+          {% endif %}
+          <div class="img-overlay"></div>
+          <span class="badge badge-{{ cat }}" style="position:absolute;top:0.75rem;left:0.75rem;backdrop-filter:blur(8px);background:rgba(0,0,0,0.4);color:#fff;border-color:rgba(255,255,255,0.25)">{{ ev['category'] }}</span>
+          <span style="position:absolute;top:0.75rem;right:0.75rem;padding:3px 10px;border-radius:99px;font-size:0.7rem;font-weight:700;backdrop-filter:blur(8px);background:rgba(0,0,0,0.45);color:#fff;border:1px solid rgba(255,255,255,0.2)">{{ ev['event_date'] or 'TBD' }}</span>
+        </div>
+        <div class="event-card-body">
+          <div class="event-card-title">{{ ev['title'] }}</div>
+          <div class="event-card-meta">📍 {{ (ev['venue'] or 'TBD')[:48] }}{% if ev['venue'] and ev['venue']|length > 48 %}…{% endif %}</div>
+          <div class="event-card-desc">{{ ev['description'] or '' }}</div>
+          <div style="margin-top:1rem;display:flex;justify-content:space-between;align-items:center">
+            <span style="color:var(--aurora1);font-size:0.8rem;font-weight:600">Register →</span>
+            <span style="color:var(--muted);font-size:0.78rem">{{ ev['max_participants'] }} seats</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="color:var(--muted);text-align:center;padding:3rem">No upcoming events yet.</p>
+    {% endif %}
+  </div>
+</section>
+
+<!-- CTA -->
+{% if not session.user_id %}
+<section style="padding:4rem 1.5rem;text-align:center">
+  <div style="max-width:580px;margin:0 auto;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:3rem 2rem">
+    <div style="font-size:2rem;margin-bottom:1rem">✦</div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:400;margin-bottom:0.8rem">Ready to explore?</h2>
+    <p style="color:var(--muted);margin-bottom:1.5rem;line-height:1.6">Create your free account, register for events, earn points, and climb the leaderboard!</p>
+    <a href="/register" class="btn btn-primary" style="font-size:1rem;padding:0.8rem 2rem">Get Started — It's Free</a>
+  </div>
+</section>
+{% endif %}
+
+<style>
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+</style>
+{% block scripts %}
+<script>
+// Live countdown timer
+var el = document.getElementById('countdown');
+if (el) {
+  var target = new Date(el.dataset.date);
+  function tick() {
+    var now = new Date();
+    var diff = target - now;
+    if (diff <= 0) { el.textContent = '🎉 Happening now!'; return; }
+    var d = Math.floor(diff / 86400000);
+    var h = Math.floor((diff % 86400000) / 3600000);
+    var m = Math.floor((diff % 3600000) / 60000);
+    var s = Math.floor((diff % 60000) / 1000);
+    el.textContent = (d > 0 ? d + 'd ' : '') + h + 'h ' + m + 'm ' + s + 's away';
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+</script>
+{% endblock %}
+{% endblock %}

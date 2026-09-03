@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Manage Users{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:3rem;padding-bottom:4rem">
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:2rem">
+    <div>
+      <div class="section-title">Manage Users</div>
+      <div class="section-sub">{{ users|length }} registered users</div>
+    </div>
+    <div class="tab-bar">
+      <a href="/admin" class="tab">Dashboard</a>
+      <a href="/admin/events" class="tab">Events</a>
+      <a href="/admin/users" class="tab active">Users</a>
+      <a href="/admin/analytics" class="tab">Analytics</a>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Name</th><th>Email</th><th>Mobile</th><th>Role</th><th>Joined</th><th>Change Role</th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td style="color:var(--muted)">{{ loop.index }}</td>
+          <td style="font-weight:500">{{ u['name'] }}</td>
+          <td style="color:var(--muted);font-size:0.85rem">{{ u['email'] }}</td>
+          <td>
+            {% if u['phone'] %}
+            <span style="font-size:0.82rem;color:var(--text)">+91 {{ u['phone'] }}</span>
+            <span style="display:block;font-size:0.68rem;color:var(--aurora4);margin-top:1px">✓ verified</span>
+            {% else %}
+            <span style="font-size:0.78rem;color:#f87171">not added</span>
+            {% endif %}
+          </td>
+          <td>
+            <span style="padding:3px 10px;border-radius:99px;font-size:0.72rem;font-weight:600;
+              background:{% if u['role']=='admin' %}rgba(167,139,250,0.15){% else %}rgba(52,211,153,0.12){% endif %};
+              color:{% if u['role']=='admin' %}var(--aurora1){% else %}#34d399{% endif %}">
+              {{ u['role'].title() }}
+            </span>
+          </td>
+          <td style="color:var(--muted);font-size:0.82rem">{{ u['created_at'][:10] }}</td>
+          <td>
+            {% if u['id'] != session.user_id %}
+            <form method="POST" action="/admin/change_role/{{ u['id'] }}" style="display:flex;gap:0.4rem">
+              <select class="form-select" name="role" style="padding:0.3rem 0.6rem;font-size:0.8rem;width:auto;border-radius:7px">
+                <option value="student" {% if u['role']=='student' %}selected{% endif %}>Student</option>
+                <option value="admin" {% if u['role']=='admin' %}selected{% endif %}>Admin</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" type="submit">Save</button>
+            </form>
+            {% else %}
+            <span style="color:var(--muted);font-size:0.8rem">(You)</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

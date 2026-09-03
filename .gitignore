@@ -1,0 +1,19 @@
+# Database (contains personal data — do not upload)
+campus.db
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Uploaded images (user content)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# VS Code settings
+.vscode/
+
+# Environment files
+.env
+venv/
+env/
