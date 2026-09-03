@@ -26,8 +26,8 @@ Open http://127.0.0.1:5000
 ## Demo Credentials
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@dream.edu | admin123 |
-| Student | rahul@dream.edu | student123 |
+| Admin | admin@dream.edu | ****** |
+| Student | rahul@dream.edu | ****** |
 
 ## Project Stats
 - 3,713 lines of code
